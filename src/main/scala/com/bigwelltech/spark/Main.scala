@@ -1,8 +1,9 @@
 package com.bigwelltech.spark
 
 import org.apache.spark.sql.SparkSession
+import com.bigwelltech.spark.util.SparkInitializer
 
-object Main {
+object Main extends SparkInitializer {
   def getRddByCollect(sparkSession: SparkSession) {
     val rdd = sparkSession.sparkContext.parallelize(Seq("one", "two", "three"))
     rdd.foreach(f => println(f))
@@ -22,20 +23,26 @@ object Main {
     maprdd.foreach(f => println(f))
     println(maprdd.count())
     println("****FlatMap*****")
-    val flatmap=rdd.flatMap(x=>x.split(" "))
-    val myrdd=flatmap.map(f=>(f,f.length()))
-    myrdd.foreach(x=>println(x))
+    val flatmap = rdd.flatMap(x => x.split(" "))
+    val myrdd = flatmap.map(f => (f, f.length()))
+    myrdd.foreach(x => println(x))
     println(myrdd.count())
 
   }
-
+  def getWordOccurance(sparkSession: SparkSession) {
+    val filerdd = sparkSession.sparkContext.textFile("src/main/resources/test.txt")
+    val flatrdd = filerdd.flatMap(x => x.split(" "))
+    val maprdd = flatrdd.map(x => (x, 1))
+    val rdd = maprdd.reduceByKey(_ + _)
+    rdd.foreach(f => println(f))
+    println(rdd.count())
+  }
   def main(args: Array[String]): Unit = {
     println("**Start**")
-    System.setProperty("hadoop.home.dir", "D:/bigwelltech/sparkconf/conf/")
-    val sparkSession = SparkSession.builder().appName("Spark-Scala_Tutorial").master("local").getOrCreate()
     //getRddByCollect(sparkSession)
     //getRddByTextFile(sparkSession)
-    mapAndFlatMap(sparkSession)
+    //mapAndFlatMap(sparkSession)
+    getWordOccurance(sparkSession)
     println("**End**")
   }
 }
